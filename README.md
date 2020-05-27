@@ -36,3 +36,10 @@ Add book to user wishlist (book and user must already have been created):
 
 Remove book from a wishlist:
 `curl -d '{"email": "me@me.com", "isbn": "12345"} -H "Content-Type: application/json" -X POST http://localhost:8000/remove_book/`
+
+
+# Test
+`./test_setup.sh`
+Press Enter
+`docker exec -it booklist ./test.sh`
+`./test_teardown.sh`
