@@ -81,11 +81,11 @@ class AddBookToListRouteHandler:
         return self.ret_val
 
 
-class RemoveBookRouteHandler:
+class RemoveBookFromListRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
 
-    def remove_book(self):
+    def remove_book_from_list(self):
         self.ret_val = ({"status": "Book removed from list"}, status.HTTP_200_OK)
         return self.ret_val

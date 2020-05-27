@@ -4,6 +4,7 @@ import sqlite3
 
 from flask import Flask, jsonify
 
+from app_files.config import constants
 from booklist_app import public
 
 
@@ -41,7 +42,7 @@ def configure_logger(app):
 
 
 def setup_database():
-    conn = sqlite3.connect("book_list.db")
+    conn = sqlite3.connect(constants.DB_NAME)
     cur = conn.cursor()
 
     create_user_table(cursor=cur)
