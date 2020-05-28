@@ -74,8 +74,11 @@ class UpdateUserRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
+        self.email = request.json["email"]
+        self.user_data = request.json
 
     def update_user(self):
+        DBInterface().update_user(email=self.email, user_data_changes=self.user_data)
         self.ret_val = ({"status": "User updated"}, status.HTTP_200_OK)
         return self.ret_val
 
@@ -84,8 +87,11 @@ class UpdateBookRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
+        self.isbn = request.json["isbn"]
+        self.book_data = request.json
 
     def update_book(self):
+        DBInterface().update_book(isbn=self.isbn, book_data_changes=self.book_data)
         self.ret_val = ({"status": "Book updated"}, status.HTTP_200_OK)
         return self.ret_val
 

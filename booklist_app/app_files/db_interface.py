@@ -2,9 +2,9 @@ import sqlite3
 
 from flask import current_app
 
-from app_files.config import constants
 import flask_settings
-from cryptography.fernet import Fernet
+from app_files import encrypter
+from app_files.config import constants
 
 
 class DBInterface:
@@ -13,32 +13,38 @@ class DBInterface:
         self.cur = self.conn.cursor()
 
     def execute_query(self, query):
+        if not self.conn:
+            self.conn = sqlite3.connect(flask_settings.DB_NAME)
         cur = self.conn.cursor()
         cur.execute(query)
         self.conn.commit()
         self.conn.close()
+        self.conn = None
 
     def execute_query_with_fetchone(self, query):
+        if not self.conn:
+            self.conn = sqlite3.connect(flask_settings.DB_NAME)
         cur = self.conn.cursor()
         cur.execute(query)
         res = cur.fetchone()
         self.conn.commit()
         self.conn.close()
+        self.conn = None
         return res
 
     def execute_query_with_fetchall(self, query):
+        if not self.conn:
+            self.conn = sqlite3.connect(flask_settings.DB_NAME)
         cur = self.conn.cursor()
         cur.execute(query)
         res = cur.fetchall()
         self.conn.commit()
         self.conn.close()
+        self.conn = None
         return res
 
     def add_user(self, user):
-        key = Fernet.generate_key()
-        cipher_suite = Fernet(key)
-        encrypted_pw = cipher_suite.encrypt(bytes(user["password"], "utf-8"))
-
+        encrypted_pw = encrypter.get_encrypted(user["password"])
         query = f"""INSERT INTO Users (email, first_name, last_name, password) VALUES ("{user['email']}", "{user['first_name']}", "{user['last_name']}", "{encrypted_pw}");"""
         self.execute_query(query)
 
@@ -52,7 +58,9 @@ class DBInterface:
         return res
 
     def get_book(self, isbn):
-        query = f"""SELECT isbn, title, author, pub_date FROM Books WHERE isbn="{isbn}" """
+        query = (
+            f"""SELECT isbn, title, author, pub_date FROM Books WHERE isbn="{isbn}" """
+        )
         res = self.execute_query_with_fetchone(query)
         return res
 
@@ -61,12 +69,49 @@ class DBInterface:
         res = self.execute_query_with_fetchall(query)
         return res
 
-    def update_user(self, user):
-        query = f"""UPDATE Users SET first_name = "{user['first_name']}", last_name = "{user['last_name']}", password = "{user['password']}" WHERE email = "{user['email']}";"""
+    def update_user(self, email, user_data_changes):
+        current_user_data_query = f"""SELECT first_name, last_name, password FROM Users WHERE email="{email}" """
+        current_user_data = self.execute_query_with_fetchone(
+            query=current_user_data_query
+        )
+        new_user_data = {
+            "first_name": current_user_data[0],
+            "last_name": current_user_data[1],
+            "password": current_user_data[2],
+        }
+        if "first_name" in user_data_changes:
+            new_user_data["first_name"] = user_data_changes["first_name"]
+        if "last_name" in user_data_changes:
+            new_user_data["last_name"] = user_data_changes["last_name"]
+        if "password" in user_data_changes:
+            new_user_data["password"] = encrypter.get_encrypted(
+                user_data_changes["password"]
+            )
+
+        query = f"""UPDATE Users SET first_name = "{new_user_data['first_name']}", last_name = "{new_user_data['last_name']}", password = "{new_user_data['password']}" WHERE email = "{email}";"""
         self.execute_query(query)
 
-    def update_book(self, book):
-        pass
+    def update_book(self, isbn, book_data_changes):
+        current_book_data_query = (
+            f"""SELECT title, author, pub_date FROM Books WHERE isbn="{isbn}" """
+        )
+        current_book_data = self.execute_query_with_fetchone(
+            query=current_book_data_query
+        )
+        new_book_data = {
+            "title": current_book_data[0],
+            "author": current_book_data[1],
+            "pub_date": current_book_data[2],
+        }
+        if "title" in book_data_changes:
+            new_book_data["title"] = book_data_changes["title"]
+        if "author" in book_data_changes:
+            new_book_data["author"] = book_data_changes["author"]
+        if "pub_date" in book_data_changes:
+            new_book_data["pub_date"] = book_data_changes["pub_date"]
+
+        query = f"""UPDATE Books SET title = "{new_book_data['title']}", author = "{new_book_data['author']}", pub_date = "{new_book_data['pub_date']}" """
+        self.execute_query(query)
 
     def add_book_to_list(self, email, isbn):
         query = f"""INSERT OR IGNORE INTO Lists (user_email, isbn) VALUES ("{email}", "{isbn}"); """

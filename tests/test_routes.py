@@ -21,7 +21,7 @@ BOOK2 = {
     "title": "Grapes of Wrath",
     "author": "Fiona O'Connell",
     "isbn": "123-4-56-123456-0",
-    "pub_date": "1960-01-02"
+    "pub_date": "1960-01-02",
 }
 
 
@@ -106,7 +106,10 @@ def test_get_list(setup, testapp):
     params = "?email=roger@gmail.com"
     res = testapp.get(f"/get_list{params}", status=200)
     assert res.json["status"] == "List returned"
-    assert res.json["data"] == [[USER1["email"], BOOK2["isbn"]], [USER1["email"], BOOK1["isbn"]]]
+    assert res.json["data"] == [
+        [USER1["email"], BOOK2["isbn"]],
+        [USER1["email"], BOOK1["isbn"]],
+    ]
 
 
 def test_update_user(setup, testapp):
@@ -121,7 +124,7 @@ def test_update_user(setup, testapp):
 
     params = "?email=roger@gmail.com"
     res = testapp.get(f"/get_user{params}", status=200)
-    # TODO check user data to see if first name changed to Bob
+    assert res.json["data"] == [USER1["email"], "Bob", "Blankman"]
 
 
 def test_update_book(setup, testapp):
@@ -134,7 +137,15 @@ def test_update_book(setup, testapp):
         status=200,
     )
     assert res.json["status"] == "Book updated"
-    # TODO test book author is now Paul Patrick
+
+    params = "?isbn=978-3-16-148410-0"
+    res = testapp.get(f"/get_book{params}", status=200)
+    assert res.json["data"] == [
+        BOOK1["isbn"],
+        BOOK1["title"],
+        "Paul Patrick",
+        BOOK1["pub_date"],
+    ]
 
 
 def test_add_book_to_list(setup, testapp):
@@ -166,7 +177,7 @@ def test_remove_book_from_list(setup, testapp):
     testapp.post_json(
         "/add_book_to_list",
         {"email": USER1["email"], "isbn": BOOK2["isbn"]},
-        status=200
+        status=200,
     )
 
     # remove one of the books
