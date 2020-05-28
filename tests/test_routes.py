@@ -1,8 +1,5 @@
 import pytest
-import sqlite3
-from app_files.config import constants
 from app_files.db_interface import DBInterface
-import flask_settings
 
 
 USER1 = {
