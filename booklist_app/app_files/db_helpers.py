@@ -23,7 +23,7 @@ def add_user(user):
 def get_user(user_email):
     conn = sqlite3.connect(flask_settings.DB_NAME)
     cur = conn.cursor()
-    query = f"""SELECT * FROM Users WHERE email="{user_email}" """
+    query = f"""SELECT email, first_name, last_name FROM Users WHERE email="{user_email}" """
     cur.execute(query)
     res = cur.fetchone()
     conn.commit()
@@ -40,6 +40,28 @@ def update_user(user):
     cur.execute(query)
     conn.commit()
     conn.close()
+
+
+def add_book(book):
+    conn = sqlite3.connect(flask_settings.DB_NAME)
+    cur = conn.cursor()
+
+    query = f"""INSERT INTO Books (isbn, title, author, pub_date) VALUES ("{book['isbn']}", "{book['title']}", "{book['author']}", "{book['pub_date']}");"""
+    cur.execute(query)
+    conn.commit()
+    conn.close()
+
+
+def get_book(isbn):
+    conn = sqlite3.connect(flask_settings.DB_NAME)
+    cur = conn.cursor()
+
+    query = f"""SELECT isbn, title, author, pub_date FROM Books WHERE isbn="{isbn}" """
+    cur.execute(query)
+    res = cur.fetchone()
+    conn.commit()
+    conn.close()
+    return res
 
 
 def setup_database():

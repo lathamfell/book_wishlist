@@ -43,21 +43,21 @@ def test_add_user(setup, testapp):
 
     params = "?email=roger@gmail.com"
     res = testapp.get(f"/get_user{params}", status=200)
-    assert res.json["status"] == "User returned"
-    #assert res.text == '{"email":"roger@gmail.com"
-    # TODO check user data
+    assert res.json["data"] == ["roger@gmail.com", "Roger", "Blankman"]
 
 
-def test_get_list(setup, testapp):
-    # create a list to be fetched
-    testapp.post_json("/add_user", USER1, status=200)
-    testapp.post_json("/add_book", BOOK1, status=200)
-    testapp.post_json("/add_book_to_list", {"email": USER1["email"], "isbn": BOOK1["isbn"]})
+def test_add_book(setup, testapp):
+    res = testapp.post_json("/add_book", BOOK1, status=200)
+    assert res.json["status"] == "Book added"
 
-    params = "?email=roger@gmail.com"
-    res = testapp.get(f"/get_list{params}", status=200)
-    assert res.json["status"] == "List returned"
-    # TODO check list data
+    params = "?isbn=978-3-16-148410-0"
+    res = testapp.get(f"/get_book{params}", status=200)
+    assert res.json["data"] == [
+        "978-3-16-148410-0",
+        "Tiamat's Wrath",
+        "James S. Corey",
+        "2020-03-24",
+    ]
 
 
 def test_get_user(setup, testapp):
@@ -66,7 +66,37 @@ def test_get_user(setup, testapp):
 
     params = "?email=roger@gmail.com"
     res = testapp.get(f"/get_user{params}", status=200)
-    # TODO check user data that it matches USER1
+    assert res.json["status"] == "User returned"
+    assert res.json["data"] == ["roger@gmail.com", "Roger", "Blankman"]
+
+
+def test_get_book(setup, testapp):
+    # create a book to be fetched
+    testapp.post_json("/add_book", BOOK1, status=200)
+
+    params = "?isbn=978-3-16-148410-0"
+    res = testapp.get(f"/get_book{params}", status=200)
+    assert res.json["status"] == "Book returned"
+    assert res.json["data"] == [
+        "978-3-16-148410-0",
+        "Tiamat's Wrath",
+        "James S. Corey",
+        "2020-03-24",
+    ]
+
+
+def test_get_list(setup, testapp):
+    # create a list to be fetched
+    testapp.post_json("/add_user", USER1, status=200)
+    testapp.post_json("/add_book", BOOK1, status=200)
+    testapp.post_json(
+        "/add_book_to_list", {"email": USER1["email"], "isbn": BOOK1["isbn"]}
+    )
+
+    params = "?email=roger@gmail.com"
+    res = testapp.get(f"/get_list{params}", status=200)
+    assert res.json["status"] == "List returned"
+    # TODO check list data
 
 
 def test_update_user(setup, testapp):
@@ -78,46 +108,15 @@ def test_update_user(setup, testapp):
     )
 
     assert res.json["status"] == "User updated"
-    
+
     params = "?email=roger@gmail.com"
     res = testapp.get(f"/get_user{params}", status=200)
     # TODO check user data to see if first name changed to Bob
 
 
-def test_delete_user(setup, testapp):
-    # create a user to be deleted
-    testapp.post_json("/add_user", USER1, status=200)
-
-    res = testapp.post_json("/delete_user", {"email": "roger@gmailcom"}, status=200)
-
-    assert res.json["status"] == "User deleted"
-
-    #TODO res = testapp.get("/get_user", USER1, status=404)
-    # TODO assert res.json["status"] == "User not found"
-
-
-def test_add_book(setup, testapp):
-    res = testapp.post_json("/add_book", BOOK1, status=200)
-    assert res.json["status"] == "Book added"
-
-    params = "?isbn=978-3-16-148410-0"
-    res = testapp.get(f"/get_book{params}", status=200)
-    # TODO check book data matches BOOK1
-
-
-def test_get_book(setup, testapp):
-    # create a book to be fetched
-    testapp.post_json("/add_book", BOOK1, status=200)
-
-    params = "?isbn=978-3-16-148410-0"
-    res = testapp.get(f"/get_book{params}", status=200)
-    assert res.json["status"] == "Book returned"
-    # TODO check book data matches BOOK1
-
-
 def test_update_book(setup, testapp):
     # create a book to be updated
-    testapp.post("/add_book", BOOK1, status=200)
+    testapp.post_json("/add_book", BOOK1, status=200)
 
     res = testapp.post_json(
         "/update_book",
@@ -126,19 +125,6 @@ def test_update_book(setup, testapp):
     )
     assert res.json["status"] == "Book updated"
     # TODO test book author is now Paul Patrick
-
-
-def test_delete_book(setup, testapp):
-    # create a book to be deleted
-    testapp.post_json("/add_book", BOOK1, status=200)
-
-    res = testapp.post_json("/delete_book", {"isbn": "978-3-16-148410-0"}, status=200)
-
-    assert res.json["status"] == "Book deleted"
-
-    params = "?isbn=978-3-16-148410-0"
-    # TODO res = testapp.get(f"/get_book{params}", status=404)
-    # TODO assert res.json["status"] == "Book not found"
 
 
 def test_add_book_to_list(setup, testapp):
@@ -157,7 +143,7 @@ def test_add_book_to_list(setup, testapp):
     # TODO test book is on the list
 
 
-def test_remove_book(setup, testapp):
+def test_remove_book_from_list(setup, testapp):
     # create a list with a book to be removed
     testapp.post_json("/add_book", BOOK1, status=200)
     testapp.post_json("/add_user", USER1, status=200)
@@ -176,3 +162,28 @@ def test_remove_book(setup, testapp):
 
     res = testapp.get("/get_list", {"email": USER1["email"]}, status=200)
     # TODO test book is not on the list
+
+
+def test_delete_user(setup, testapp):
+    # create a user to be deleted
+    testapp.post_json("/add_user", USER1, status=200)
+
+    res = testapp.post_json("/delete_user", {"email": "roger@gmailcom"}, status=200)
+
+    assert res.json["status"] == "User deleted"
+
+    # TODO res = testapp.get("/get_user", USER1, status=404)
+    # TODO assert res.json["status"] == "User not found"
+
+
+def test_delete_book(setup, testapp):
+    # create a book to be deleted
+    testapp.post_json("/add_book", BOOK1, status=200)
+
+    res = testapp.post_json("/delete_book", {"isbn": "978-3-16-148410-0"}, status=200)
+
+    assert res.json["status"] == "Book deleted"
+
+    params = "?isbn=978-3-16-148410-0"
+    # TODO res = testapp.get(f"/get_book{params}", status=404)
+    # TODO assert res.json["status"] == "Book not found"
