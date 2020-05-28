@@ -6,7 +6,8 @@ from app_files.route_handlers import (AddBookRouteHandler,
                                       AddUserRouteHandler,
                                       DeleteBookRouteHandler,
                                       DeleteUserRouteHandler,
-                                      GetListRouteHandler,
+                                      GetBookRouteHandler, GetListRouteHandler,
+                                      GetUserRouteHandler,
                                       RemoveBookFromListRouteHandler,
                                       UpdateBookRouteHandler,
                                       UpdateUserRouteHandler)
@@ -23,6 +24,13 @@ def index():
 @blueprint.route("/add_user", methods=["POST"])
 def add_user():
     ret_val = AddUserRouteHandler(request=request).add_user()
+    current_app.logger.debug(f"Returning to client: {ret_val}")
+    return ret_val
+
+
+@blueprint.route("/get_user", methods=["GET"])
+def get_user():
+    ret_val = GetUserRouteHandler(request=request).get_user()
     current_app.logger.debug(f"Returning to client: {ret_val}")
     return ret_val
 
@@ -55,9 +63,9 @@ def add_book():
     return ret_val
 
 
-@blueprint.route("/delete_book", methods=["POST"])
-def delete_book():
-    ret_val = DeleteBookRouteHandler(request=request).delete_book()
+@blueprint.route("/get_book", methods=["GET"])
+def get_book():
+    ret_val = GetBookRouteHandler(request=request).get_book()
     current_app.logger.debug(f"Returning to client: {ret_val}")
     return ret_val
 
@@ -65,6 +73,13 @@ def delete_book():
 @blueprint.route("/update_book", methods=["POST"])
 def update_book():
     ret_val = UpdateBookRouteHandler(request=request).update_book()
+    current_app.logger.debug(f"Returning to client: {ret_val}")
+    return ret_val
+
+
+@blueprint.route("/delete_book", methods=["POST"])
+def delete_book():
+    ret_val = DeleteBookRouteHandler(request=request).delete_book()
     current_app.logger.debug(f"Returning to client: {ret_val}")
     return ret_val
 

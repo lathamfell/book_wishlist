@@ -1,13 +1,28 @@
 from flask_api import status
+from app_files.config import constants
+import sqlite3
+from app_files import db_helpers
 
 
 class AddUserRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
+        self.user = request.json
 
     def add_user(self):
+        db_helpers.update_user(user=self.user)
         self.ret_val = ({"status": "User added"}, status.HTTP_200_OK)
+        return self.ret_val
+
+
+class GetUserRouteHandler:
+    def __init__(self, request):
+        self.request = request
+        self.ret_val = None
+
+    def get_user(self):
+        self.ret_val = ({"status": "User returned"}, status.HTTP_200_OK)
         return self.ret_val
 
 
@@ -51,13 +66,13 @@ class AddBookRouteHandler:
         return self.ret_val
 
 
-class DeleteBookRouteHandler:
+class GetBookRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
 
-    def delete_book(self):
-        self.ret_val = ({"status": "Book deleted"}, status.HTTP_200_OK)
+    def get_book(self):
+        self.ret_val = ({"status": "Book returned"}, status.HTTP_200_OK)
         return self.ret_val
 
 
@@ -68,6 +83,16 @@ class UpdateBookRouteHandler:
 
     def update_book(self):
         self.ret_val = ({"status": "Book updated"}, status.HTTP_200_OK)
+        return self.ret_val
+
+
+class DeleteBookRouteHandler:
+    def __init__(self, request):
+        self.request = request
+        self.ret_val = None
+
+    def delete_book(self):
+        self.ret_val = ({"status": "Book deleted"}, status.HTTP_200_OK)
         return self.ret_val
 
 
