@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
-import sqlite3
 
-from flask import Flask, jsonify
+from flask import Flask
 
-import flask_settings
 from booklist_app import public
-from app_files import db_helpers
+from app_files.db_interface import DBInterface
 
 
 def create_app(config_object="booklist_app.flask_settings"):
@@ -20,7 +18,7 @@ def create_app(config_object="booklist_app.flask_settings"):
     register_blueprints(app)
     register_errorhandlers(app)
     configure_logger(app)
-    db_helpers.setup_database()
+    DBInterface.setup_database()
     return app
 
 

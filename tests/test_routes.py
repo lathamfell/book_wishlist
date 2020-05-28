@@ -1,7 +1,7 @@
 import pytest
 import sqlite3
 from app_files.config import constants
-from app_files import db_helpers
+from app_files.db_interface import DBInterface
 import flask_settings
 
 
@@ -27,8 +27,8 @@ BOOK2 = {
 
 @pytest.fixture
 def setup():
-    db_helpers.clear_database()
-    db_helpers.setup_database()
+    DBInterface.clear_database()
+    DBInterface.setup_database()
     setup = {}
     yield setup
 
@@ -52,6 +52,13 @@ def test_add_user(setup, testapp):
     assert res.json["data"] == ["roger@gmail.com", "Roger", "Blankman"]
 
 
+def test_add_user_with_user_already_existing(setup, testapp):
+    # try to add the same user twice
+    testapp.post_json("/add_user", USER1, status=200)
+    res = testapp.post_json("/add_user", USER1, status=409)
+    assert res.json["status"] == "User already exists"
+
+
 def test_add_book(setup, testapp):
     res = testapp.post_json("/add_book", BOOK1, status=200)
     assert res.json["status"] == "Book added"
@@ -64,6 +71,13 @@ def test_add_book(setup, testapp):
         "James S. Corey",
         "2020-03-24",
     ]
+
+
+def test_add_book_with_book_already_existing(setup, testapp):
+    # try to add the same book twice
+    testapp.post_json("/add_book", BOOK1, status=200)
+    res = testapp.post_json("/add_book", BOOK1, status=409)
+    assert res.json["status"] == "Book already exists"
 
 
 def test_get_user(setup, testapp):
@@ -193,6 +207,13 @@ def test_remove_book_from_list(setup, testapp):
     assert res.json["data"] == [[USER1["email"], BOOK2["isbn"]]]
 
 
+def test_remove_book_that_is_not_on_wishlist(setup, testapp):
+    res = testapp.post_json(
+        "/remove_book_from_list", {"email": "roger@blank.com", "isbn": "92"}, status=404
+    )
+    assert res.json["status"] == "Book not found on wishlist"
+
+
 def test_delete_user(setup, testapp):
     # create a user to be deleted
     testapp.post_json("/add_user", USER1, status=200)
@@ -201,9 +222,29 @@ def test_delete_user(setup, testapp):
 
     assert res.json["status"] == "User deleted"
 
+    # try to fetch user
     params = "?email=roger@gmail.com"
     res = testapp.get(f"/get_user{params}", status=404)
     assert res.json["status"] == "User not found"
+
+
+def test_delete_user_and_wishlist(setup, testapp):
+    # create a list
+    testapp.post_json("/add_book", BOOK1, status=200)
+    testapp.post_json("/add_user", USER1, status=200)
+    testapp.post_json(
+        "/add_book_to_list",
+        {"email": USER1["email"], "isbn": BOOK1["isbn"]},
+        status=200,
+    )
+
+    # delete the user
+    testapp.post_json("/delete_user", {"email": USER1["email"]}, status=200)
+
+    # try to fetch list
+    params = "?email=roger@gmail.com"
+    res = testapp.get(f"/get_list{params}", status=404)
+    assert res.json["status"] == "No wishlist found for User"
 
 
 def test_delete_book(setup, testapp):

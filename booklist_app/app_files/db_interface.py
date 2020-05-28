@@ -4,7 +4,7 @@ from flask import current_app
 
 import flask_settings
 from app_files import encrypter
-from app_files.config import constants
+from app_files.exceptions import BookNotFoundInList
 
 
 class DBInterface:
@@ -118,16 +118,25 @@ class DBInterface:
         self.execute_query(query)
 
     def remove_book_from_list(self, email, isbn):
-        query = f"""DELETE FROM Lists WHERE user_email="{email}" AND isbn="{isbn}"; """
-        self.execute_query(query)
+        count_query = f"""SELECT * FROM Lists WHERE user_email="{email}" AND isbn="{isbn}"; """
+        res = self.execute_query_with_fetchone(count_query)
+        if res:
+            delete_query = f"""DELETE FROM Lists WHERE user_email="{email}" AND isbn="{isbn}"; """
+            self.execute_query(delete_query)
+        else:
+            raise BookNotFoundInList
 
     def delete_user(self, email):
-        query = f"""DELETE FROM Users WHERE email="{email}"; """
-        self.execute_query(query)
+        delete_user_query = f"""DELETE FROM Users WHERE email="{email}"; """
+        self.execute_query(delete_user_query)
+        clean_wishlist_query = f"""DELETE FROM Lists WHERE user_email="{email}"; """
+        self.execute_query(clean_wishlist_query)
 
     def delete_book(self, isbn):
-        query = f"""DELETE FROM Books WHERE isbn="{isbn}"; """
-        self.execute_query(query)
+        delete_book_query = f"""DELETE FROM Books WHERE isbn="{isbn}"; """
+        self.execute_query(delete_book_query)
+        clean_wishlist_query = f"""DELETE FROM Lists WHERE isbn="{isbn}"; """
+        self.execute_query(clean_wishlist_query)
 
     @staticmethod
     def setup_database():

@@ -1,7 +1,9 @@
-from flask_api import status
-from app_files.config import constants
 import sqlite3
+
+from flask_api import status
+
 from app_files.db_interface import DBInterface
+from app_files.exceptions import BookNotFoundInList
 
 
 class AddUserRouteHandler:
@@ -11,8 +13,11 @@ class AddUserRouteHandler:
         self.user = request.json
 
     def add_user(self):
-        DBInterface().add_user(user=self.user)
-        self.ret_val = ({"status": "User added"}, status.HTTP_200_OK)
+        try:
+            DBInterface().add_user(user=self.user)
+            self.ret_val = ({"status": "User added"}, status.HTTP_200_OK)
+        except sqlite3.IntegrityError:
+            self.ret_val = ({"status": "User already exists"}, status.HTTP_409_CONFLICT)
         return self.ret_val
 
 
@@ -23,8 +28,11 @@ class AddBookRouteHandler:
         self.book = request.json
 
     def add_book(self):
-        DBInterface().add_book(book=self.book)
-        self.ret_val = ({"status": "Book added"}, status.HTTP_200_OK)
+        try:
+            DBInterface().add_book(book=self.book)
+            self.ret_val = ({"status": "Book added"}, status.HTTP_200_OK)
+        except sqlite3.IntegrityError:
+            self.ret_val = ({"status": "Book already exists"}, status.HTTP_409_CONFLICT)
         return self.ret_val
 
 
@@ -37,7 +45,10 @@ class GetUserRouteHandler:
     def get_user(self):
         user_data = DBInterface().get_user(user_email=self.user_email)
         if user_data:
-            self.ret_val = ({"status": "User returned", "data": user_data}, status.HTTP_200_OK)
+            self.ret_val = (
+                {"status": "User returned", "data": user_data},
+                status.HTTP_200_OK,
+            )
         else:
             self.ret_val = ({"status": "User not found"}, status.HTTP_404_NOT_FOUND)
         return self.ret_val
@@ -52,7 +63,10 @@ class GetBookRouteHandler:
     def get_book(self):
         book_data = DBInterface().get_book(isbn=self.isbn)
         if book_data:
-            self.ret_val = ({"status": "Book returned", "data": book_data}, status.HTTP_200_OK)
+            self.ret_val = (
+                {"status": "Book returned", "data": book_data},
+                status.HTTP_200_OK,
+            )
         else:
             self.ret_val = ({"status": "Book not found"}, status.HTTP_404_NOT_FOUND)
         return self.ret_val
@@ -66,7 +80,16 @@ class GetListRouteHandler:
 
     def get_list(self):
         wishlist = DBInterface().get_list(email=self.email)
-        self.ret_val = ({"status": "List returned", "data": wishlist}, status.HTTP_200_OK)
+        if wishlist:
+            self.ret_val = (
+                {"status": "List returned", "data": wishlist},
+                status.HTTP_200_OK,
+            )
+        else:
+            self.ret_val = (
+                {"status": "No wishlist found for User"},
+                status.HTTP_404_NOT_FOUND,
+            )
         return self.ret_val
 
 
@@ -117,8 +140,14 @@ class RemoveBookFromListRouteHandler:
         self.isbn = request.json["isbn"]
 
     def remove_book_from_list(self):
-        DBInterface().remove_book_from_list(email=self.email, isbn=self.isbn)
-        self.ret_val = ({"status": "Book removed from list"}, status.HTTP_200_OK)
+        try:
+            DBInterface().remove_book_from_list(email=self.email, isbn=self.isbn)
+            self.ret_val = ({"status": "Book removed from list"}, status.HTTP_200_OK)
+        except BookNotFoundInList:
+            self.ret_val = (
+                {"status": "Book not found on wishlist"},
+                status.HTTP_404_NOT_FOUND,
+            )
         return self.ret_val
 
 
