@@ -1,7 +1,7 @@
 from flask_api import status
 from app_files.config import constants
 import sqlite3
-from app_files import db_helpers
+from app_files.db_interface import DBInterface
 
 
 class AddUserRouteHandler:
@@ -11,7 +11,7 @@ class AddUserRouteHandler:
         self.user = request.json
 
     def add_user(self):
-        db_helpers.add_user(user=self.user)
+        DBInterface().add_user(user=self.user)
         self.ret_val = ({"status": "User added"}, status.HTTP_200_OK)
         return self.ret_val
 
@@ -23,7 +23,7 @@ class AddBookRouteHandler:
         self.book = request.json
 
     def add_book(self):
-        db_helpers.add_book(book=self.book)
+        DBInterface().add_book(book=self.book)
         self.ret_val = ({"status": "Book added"}, status.HTTP_200_OK)
         return self.ret_val
 
@@ -35,7 +35,7 @@ class GetUserRouteHandler:
         self.user_email = request.args["email"]
 
     def get_user(self):
-        user_data = db_helpers.get_user(user_email=self.user_email)
+        user_data = DBInterface().get_user(user_email=self.user_email)
         self.ret_val = ({"status": "User returned", "data": user_data}, status.HTTP_200_OK)
         return self.ret_val
 
@@ -47,7 +47,7 @@ class GetBookRouteHandler:
         self.isbn = request.args["isbn"]
 
     def get_book(self):
-        book_data = db_helpers.get_book(isbn=self.isbn)
+        book_data = DBInterface().get_book(isbn=self.isbn)
         self.ret_val = ({"status": "Book returned", "data": book_data}, status.HTTP_200_OK)
         return self.ret_val
 
@@ -56,9 +56,11 @@ class GetListRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
+        self.email = request.args["email"]
 
     def get_list(self):
-        self.ret_val = ({"status": "List returned"}, status.HTTP_200_OK)
+        wishlist = DBInterface().get_list(email=self.email)
+        self.ret_val = ({"status": "List returned", "data": wishlist}, status.HTTP_200_OK)
         return self.ret_val
 
 
@@ -86,8 +88,11 @@ class AddBookToListRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
+        self.email = request.json["email"]
+        self.isbn = request.json["isbn"]
 
     def add_book_to_list(self):
+        DBInterface().add_book_to_list(email=self.email, isbn=self.isbn)
         self.ret_val = ({"status": "Book added to list"}, status.HTTP_200_OK)
         return self.ret_val
 

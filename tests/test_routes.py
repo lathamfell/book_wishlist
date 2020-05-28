@@ -17,6 +17,12 @@ BOOK1 = {
     "isbn": "978-3-16-148410-0",
     "pub_date": "2020-03-24",
 }
+BOOK2 = {
+    "title": "Grapes of Wrath",
+    "author": "Fiona O'Connell",
+    "isbn": "123-4-56-123456-0",
+    "pub_date": "1960-01-02"
+}
 
 
 @pytest.fixture
@@ -89,14 +95,18 @@ def test_get_list(setup, testapp):
     # create a list to be fetched
     testapp.post_json("/add_user", USER1, status=200)
     testapp.post_json("/add_book", BOOK1, status=200)
+    testapp.post_json("/add_book", BOOK2, status=200)
     testapp.post_json(
         "/add_book_to_list", {"email": USER1["email"], "isbn": BOOK1["isbn"]}
+    )
+    testapp.post_json(
+        "/add_book_to_list", {"email": USER1["email"], "isbn": BOOK2["isbn"]}
     )
 
     params = "?email=roger@gmail.com"
     res = testapp.get(f"/get_list{params}", status=200)
     assert res.json["status"] == "List returned"
-    # TODO check list data
+    assert res.json["data"] == [[USER1["email"], BOOK2["isbn"]], [USER1["email"], BOOK1["isbn"]]]
 
 
 def test_update_user(setup, testapp):
@@ -140,7 +150,7 @@ def test_add_book_to_list(setup, testapp):
     assert res.json["status"] == "Book added to list"
 
     res = testapp.get("/get_list", {"email": "roger@gmail.com"}, status=200)
-    # TODO test book is on the list
+    assert res.json["data"] == [[USER1["email"], BOOK1["isbn"]]]
 
 
 def test_remove_book_from_list(setup, testapp):
