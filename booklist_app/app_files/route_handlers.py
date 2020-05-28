@@ -107,8 +107,11 @@ class RemoveBookFromListRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
+        self.email = request.json["email"]
+        self.isbn = request.json["isbn"]
 
     def remove_book_from_list(self):
+        DBInterface().remove_book_from_list(email=self.email, isbn=self.isbn)
         self.ret_val = ({"status": "Book removed from list"}, status.HTTP_200_OK)
         return self.ret_val
 

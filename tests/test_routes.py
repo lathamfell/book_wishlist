@@ -154,15 +154,22 @@ def test_add_book_to_list(setup, testapp):
 
 
 def test_remove_book_from_list(setup, testapp):
-    # create a list with a book to be removed
+    # create a list with two books on it
     testapp.post_json("/add_book", BOOK1, status=200)
+    testapp.post_json("/add_book", BOOK2, status=200)
     testapp.post_json("/add_user", USER1, status=200)
     testapp.post_json(
         "/add_book_to_list",
         {"email": USER1["email"], "isbn": BOOK1["isbn"]},
         status=200,
     )
+    testapp.post_json(
+        "/add_book_to_list",
+        {"email": USER1["email"], "isbn": BOOK2["isbn"]},
+        status=200
+    )
 
+    # remove one of the books
     res = testapp.post_json(
         "/remove_book_from_list",
         {"email": USER1["email"], "isbn": BOOK1["isbn"]},
@@ -170,8 +177,9 @@ def test_remove_book_from_list(setup, testapp):
     )
     assert res.json["status"] == "Book removed from list"
 
+    # confirm book1 was removed, leaving only book2
     res = testapp.get("/get_list", {"email": USER1["email"]}, status=200)
-    # TODO test book is not on the list
+    assert res.json["data"] == [[USER1["email"], BOOK2["isbn"]]]
 
 
 def test_delete_user(setup, testapp):

@@ -73,7 +73,8 @@ class DBInterface:
         self.execute_query(query)
 
     def remove_book_from_list(self, email, isbn):
-        pass
+        query = f"""DELETE FROM Lists WHERE user_email="{email}" AND isbn="{isbn}"; """
+        self.execute_query(query)
 
     def delete_user(self, email):
         query = f"""DELETE FROM Users WHERE email="{email}"; """
