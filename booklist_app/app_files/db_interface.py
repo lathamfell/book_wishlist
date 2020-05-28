@@ -42,18 +42,14 @@ class DBInterface:
         query = f"""INSERT INTO Users (email, first_name, last_name, password) VALUES ("{user['email']}", "{user['first_name']}", "{user['last_name']}", "{encrypted_pw}");"""
         self.execute_query(query)
 
+    def add_book(self, book):
+        query = f"""INSERT INTO Books (isbn, title, author, pub_date) VALUES ("{book['isbn']}", "{book['title']}", "{book['author']}", "{book['pub_date']}");"""
+        self.execute_query(query)
+
     def get_user(self, user_email):
         query = f"""SELECT email, first_name, last_name FROM Users WHERE email="{user_email}" """
         res = self.execute_query_with_fetchone(query)
         return res
-
-    def update_user(self, user):
-        query = f"""UPDATE Users SET first_name = "{user['first_name']}", last_name = "{user['last_name']}", password = "{user['password']}" WHERE email = "{user['email']}";"""
-        self.execute_query(query)
-
-    def add_book(self, book):
-        query = f"""INSERT INTO Books (isbn, title, author, pub_date) VALUES ("{book['isbn']}", "{book['title']}", "{book['author']}", "{book['pub_date']}");"""
-        self.execute_query(query)
 
     def get_book(self, isbn):
         query = f"""SELECT isbn, title, author, pub_date FROM Books WHERE isbn="{isbn}" """
@@ -65,8 +61,26 @@ class DBInterface:
         res = self.execute_query_with_fetchall(query)
         return res
 
+    def update_user(self, user):
+        query = f"""UPDATE Users SET first_name = "{user['first_name']}", last_name = "{user['last_name']}", password = "{user['password']}" WHERE email = "{user['email']}";"""
+        self.execute_query(query)
+
+    def update_book(self, book):
+        pass
+
     def add_book_to_list(self, email, isbn):
         query = f"""INSERT OR IGNORE INTO Lists (user_email, isbn) VALUES ("{email}", "{isbn}"); """
+        self.execute_query(query)
+
+    def remove_book_from_list(self, email, isbn):
+        pass
+
+    def delete_user(self, email):
+        query = f"""DELETE FROM Users WHERE email="{email}"; """
+        self.execute_query(query)
+
+    def delete_book(self, isbn):
+        query = f"""DELETE FROM Books WHERE isbn="{isbn}"; """
         self.execute_query(query)
 
     @staticmethod

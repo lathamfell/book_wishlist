@@ -178,12 +178,13 @@ def test_delete_user(setup, testapp):
     # create a user to be deleted
     testapp.post_json("/add_user", USER1, status=200)
 
-    res = testapp.post_json("/delete_user", {"email": "roger@gmailcom"}, status=200)
+    res = testapp.post_json("/delete_user", {"email": "roger@gmail.com"}, status=200)
 
     assert res.json["status"] == "User deleted"
 
-    # TODO res = testapp.get("/get_user", USER1, status=404)
-    # TODO assert res.json["status"] == "User not found"
+    params = "?email=roger@gmail.com"
+    res = testapp.get(f"/get_user{params}", status=404)
+    assert res.json["status"] == "User not found"
 
 
 def test_delete_book(setup, testapp):
@@ -195,5 +196,5 @@ def test_delete_book(setup, testapp):
     assert res.json["status"] == "Book deleted"
 
     params = "?isbn=978-3-16-148410-0"
-    # TODO res = testapp.get(f"/get_book{params}", status=404)
-    # TODO assert res.json["status"] == "Book not found"
+    res = testapp.get(f"/get_book{params}", status=404)
+    assert res.json["status"] == "Book not found"
