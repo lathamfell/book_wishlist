@@ -11,7 +11,7 @@ class AddUserRouteHandler:
         self.user = request.json
 
     def add_user(self):
-        db_helpers.update_user(user=self.user)
+        db_helpers.add_user(user=self.user)
         self.ret_val = ({"status": "User added"}, status.HTTP_200_OK)
         return self.ret_val
 
@@ -20,9 +20,11 @@ class GetUserRouteHandler:
     def __init__(self, request):
         self.request = request
         self.ret_val = None
+        self.user_email = request.args["email"]
 
     def get_user(self):
-        self.ret_val = ({"status": "User returned"}, status.HTTP_200_OK)
+        user_data = db_helpers.get_user(user_email=self.user_email)
+        self.ret_val = ({"status": "User returned", "data": user_data}, status.HTTP_200_OK)
         return self.ret_val
 
 

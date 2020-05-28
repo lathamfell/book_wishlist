@@ -16,6 +16,7 @@ webtest = "*"
 pycodestyle = "*"
 pylint = "*"
 black = "*"
+cryptography = "*"
 
 [requires]
 python_version = "3.6"

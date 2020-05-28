@@ -1,6 +1,8 @@
 import pytest
 import sqlite3
 from app_files.config import constants
+from app_files import db_helpers
+import flask_settings
 
 
 USER1 = {
@@ -19,16 +21,10 @@ BOOK1 = {
 
 @pytest.fixture
 def setup():
-    conn = sqlite3.connect(constants.DB_NAME_TEST)
-    cur = conn.cursor()
-    cur.execute("""DROP TABLE IF EXISTS Users""")
-    cur.execute("""DROP TABLE IF EXISTS Books""")
-    cur.execute("""DROP TABLE IF EXISTS Lists""")
-    conn.commit()
-
-    setup = {"conn": conn}
+    db_helpers.clear_database()
+    db_helpers.setup_database()
+    setup = {}
     yield setup
-    conn.close()
 
 
 def test_index(setup, testapp):

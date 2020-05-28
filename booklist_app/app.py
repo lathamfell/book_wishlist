@@ -4,8 +4,9 @@ import sqlite3
 
 from flask import Flask, jsonify
 
-from app_files.config import constants
+import flask_settings
 from booklist_app import public
+from app_files import db_helpers
 
 
 def create_app(config_object="booklist_app.flask_settings"):
@@ -19,7 +20,7 @@ def create_app(config_object="booklist_app.flask_settings"):
     register_blueprints(app)
     register_errorhandlers(app)
     configure_logger(app)
-    setup_database()
+    db_helpers.setup_database()
     return app
 
 
@@ -39,46 +40,3 @@ def configure_logger(app):
     gunicorn_logger = logging.getLogger("gunicorn.error")
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
-
-
-def setup_database():
-    conn = sqlite3.connect(constants.DB_NAME)
-    cur = conn.cursor()
-
-    create_user_table(cursor=cur)
-    create_book_table(cursor=cur)
-    create_list_table(cursor=cur)
-
-    conn.commit()
-    conn.close()
-
-
-def create_user_table(cursor):
-    query = """
-    CREATE TABLE IF NOT EXISTS Users (
-        email VARCHAR(75) PRIMARY KEY,
-        first_name VARCHAR(50),
-        last_name VARCHAR(50),
-        password VARCHAR(50));"""
-    cursor.execute(query)
-
-
-def create_book_table(cursor):
-    query = """
-    CREATE TABLE IF NOT EXISTS Books (
-        isbn VARCHAR(13) PRIMARY KEY,
-        title VARCHAR(50),
-        author VARCHAR(50),
-        pub_date DATE);"""
-    cursor.execute(query)
-
-
-def create_list_table(cursor):
-    query = """
-    CREATE TABLE IF NOT EXISTS Lists (
-        user_email email VARCHAR(75),
-        isbn VARCHAR(13),
-        FOREIGN KEY(user_email) REFERENCES Users(email),
-        FOREIGN KEY(isbn) REFERENCES Books(isbn),
-        PRIMARY KEY(user_email, isbn)); """
-    cursor.execute(query)
